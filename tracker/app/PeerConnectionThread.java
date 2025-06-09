@@ -25,8 +25,9 @@ public class PeerConnectionThread extends ConnectionThread {
 			refreshStatus();
 			refreshFileList();
 			TrackerApp.addPeerConnection(this);
-			throw new UnsupportedOperationException("Initial handshake not implemented yet");
+			return true;
 		} catch (Exception e) {
+			e.printStackTrace();
 			return false;
 		}
 	}

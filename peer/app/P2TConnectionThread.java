@@ -21,16 +21,20 @@ public class P2TConnectionThread extends ConnectionThread {
 			socket.setSoTimeout(TIMEOUT_MILLIS);
 
 			dataInputStream.readUTF();
+
 			Message message1 = P2TConnectionController.status();
 			sendMessage(message1);
 
 			dataInputStream.readUTF();
+
 			Message message2 = P2TConnectionController.getFilesList();
 			sendMessage(message2);
+
 
 			socket.setSoTimeout(0);
 			return true;
 		} catch (Exception e) {
+			e.printStackTrace();
 			return false;
 		}
 	}

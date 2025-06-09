@@ -10,9 +10,9 @@ public enum TrackerCommands implements CLICommands {
 	REFRESH_FILES("^\\s*refresh_files\\s*$"),
 	RESET_CONNECTIONS("^\\s*reset_connections\\s*$"),
 	LIST_PEERS("^\\s*list_peers\\s*$"),
-	LIST_FILES("\\s*list_files\\s+(?<ip>.+?):(?<port>.+?)\\s*^$"),
-	GET_SENDS("\\s*get_sends\\s+(?<ip>.+?):(?<port>.+?)\\s*^$"),
-	GET_RECEIVES("\\s*get_receives\\s+(?<ip>.+?):(?<port>.+?)\\s*^$"),
+	LIST_FILES("^\\s*list_files\\s+(?<ip>.+?):(?<port>.+?)\\s*$"),
+	GET_SENDS("^\\s*get_sends\\s+(?<ip>.+?):(?<port>.+?)\\s*$"),
+	GET_RECEIVES("^\\s*get_receives\\s+(?<ip>.+?):(?<port>.+?)\\s*$"),
 	;
 
 	private final String regex;

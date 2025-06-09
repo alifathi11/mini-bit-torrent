@@ -8,6 +8,7 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import static peer.app.PeerApp.TIMEOUT_MILLIS;
+import static peer.app.PeerApp.isEnded;
 
 public class P2PListenerThread extends Thread {
 	private final ServerSocket serverSocket;
@@ -20,19 +21,12 @@ public class P2PListenerThread extends Thread {
 
 		socket.setSoTimeout(TIMEOUT_MILLIS);
 
-		try (
-				InputStream inputStream = socket.getInputStream();
-				BufferedReader in = new BufferedReader(new InputStreamReader(inputStream));
-		) {
-			StringBuilder sb = new StringBuilder();
-			String line;
-			while ((line = in.readLine()) != null && !line.isEmpty()) {
-				sb.append(line);
-			}
-
-			String jsonMessage = sb.toString().trim();
+		try {
+			DataInputStream dis = new DataInputStream(socket.getInputStream());
+			String jsonMessage = dis.readUTF();
 
 			if (jsonMessage.isEmpty()) {
+				socket.close();
 				return;
 			}
 
@@ -44,23 +38,22 @@ public class P2PListenerThread extends Thread {
 
 		} catch (IOException e) {
 			e.printStackTrace();
-		} finally {
-			if (!socket.isClosed()) {
-				socket.close();
-			}
 		}
-
 	}
 
 	private void handleDownloadRequest(Message message, Socket socket) throws IOException {
 		String fileName = message.getFromBody("name");
-		String md5 = message.getFromBody("md5");
 		String receiverIp = message.getFromBody("receiver_ip");
 		int receiverPort = message.getIntFromBody("receiver_port");
 
 		String receiver = String.format(receiverIp + ":" + receiverPort);
 
 		File file = new File(PeerApp.getSharedFolderPath(), fileName);
+
+		if (!file.exists()) {
+			if (!socket.isClosed()) socket.close();
+			return;
+		}
 
 		TorrentP2PThread downloadThread = new TorrentP2PThread(socket, file, receiver);
 		downloadThread.start();

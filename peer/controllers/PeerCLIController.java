@@ -16,8 +16,6 @@ import java.util.regex.Matcher;
 
 public class PeerCLIController {
 	public static String processCommand(String command) {
-		// TODO: Process Peer CLI commands
-		// 1. Check command type (END_PROGRAM, DOWNLOAD, LIST)
 		PeerCommands peerCommand = null;
 		Matcher matcher = null;
 		boolean matched = false;
@@ -26,16 +24,23 @@ public class PeerCLIController {
 				matched = true;
 				peerCommand = pc;
 				matcher = pc.getMatcher(command);
+				break;
 			}
 		}
-		if (!matched) return CLICommands.invalidCommand;
+		if (!matched || matcher == null) return CLICommands.invalidCommand;
 
+		boolean groupsMatched = matcher.matches();
 		String result;
 
 		// 2. Call appropriate handler
 		switch (peerCommand) {
 			case DOWNLOAD:
-				result = handleDownload(matcher.group("file_name"));
+				if (groupsMatched) {
+					String fileName = matcher.group("fileName");
+					result = handleDownload(fileName);
+				} else {
+					result = "Invalid format for list_files command.";
+				}
 				break;
 			case LIST:
 				result = handleListFiles();
@@ -53,9 +58,11 @@ public class PeerCLIController {
 
 	private static String handleListFiles() {
 		Map<String, String> fileList = FileUtils.listFilesInFolder(PeerApp.getSharedFolderPath());
+		if (fileList.isEmpty()) {
+			return "Repository is empty.";
+		}
 		return FileUtils.getSortedFileList(fileList);
 	}
-
 
 	private static String handleDownload(String fileName) {
 		try {
@@ -70,19 +77,17 @@ public class PeerCLIController {
 			if (responseStatus.equals("peer_found")) {
 
 				String peerIp = responseMessage.getFromBody("peer_have");
-				int peerPort = responseMessage.getFromBody("peer_port");
+				int peerPort = responseMessage.getIntFromBody("peer_port");
 				String fileMd5 = responseMessage.getFromBody("md5");
 
-				PeerApp.requestDownload(peerIp, peerPort, fileName, fileMd5);
-				// return result
-				return "";
+                return PeerApp.requestDownload(peerIp, peerPort, fileName, fileMd5);
 			} else if (responseStatus.equals("error")) {
 				String error = responseMessage.getFromBody("error");
 				switch (error) {
 					case "not_found":
-						return "";
+						return "No peer has the file!";
 					case "multiple_hash":
-						return "";
+						return "Multiple hashes found!";
 					default:
 						return "Unknown error occurred.";
 				}

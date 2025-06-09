@@ -41,13 +41,13 @@ public class TorrentP2PThread extends Thread {
 		} catch (IOException e) {
 			System.err.println("Error sending file: " + e.getMessage());
 		} finally {
-			try {
-				if (socket != null && !socket.isClosed()) {
-					socket.close();
-				}
-			} catch (IOException e) {
-				System.err.println("Error closing socket: " + e.getMessage());
-			}
+			if (socket != null && !socket.isClosed()) {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
 		}
 	}
 

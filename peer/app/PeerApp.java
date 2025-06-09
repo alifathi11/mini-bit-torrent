@@ -11,7 +11,6 @@ import java.util.*;
 public class PeerApp {
 	public static final int TIMEOUT_MILLIS = 500;
 
-	// TODO:  sent files, received files, tracker connection thread, p2p listener thread, torrent p2p threads
 	private static String PEER_IP;
 	private static int PEER_PORT;
 	private static Socket socket; // check
@@ -43,11 +42,11 @@ public class PeerApp {
 		PEER_IP = peerAddressParts[0];
 		PEER_PORT = Integer.parseInt(peerAddressParts[1]);
 
-		socket = new Socket(PEER_IP, PEER_PORT); // check
-
 		// 2. Parse tracker address (ip:port)
 		TRACKER_IP = trackerAddressParts[0];
 		TRACKER_PORT = Integer.parseInt(trackerAddressParts[1]);
+
+		socket = new Socket(TRACKER_IP, TRACKER_PORT); // check
 		// 3. Set shared folder path
 		SHARED_FOLDER_PATH = args[2];
 		// 4. Create tracker connection thread
@@ -159,32 +158,29 @@ public class PeerApp {
 		return trackerConnectionThread;
 	}
 
-	public static void requestDownload(String ip, int port, String filename, String md5) throws Exception {
-		// TODO: Implement file download from peer
+	public static String requestDownload(String ip, int port, String filename, String md5) throws Exception {
 		// 1. Check if file already exists
 		File targetFile = new File(SHARED_FOLDER_PATH, filename);
 		if (targetFile.exists()) {
-			System.out.println("");
-			return;
+			return "You already have the file!";
 		}
 		// 2. Create download request message
 		HashMap<String, Object> body = new HashMap<>();
 		body.put("name", filename);
 		body.put("md5", md5);
-		body.put("receiver_ip", ip);
-		body.put("receiver_port", port);
+		body.put("receiver_ip", PEER_IP);
+		body.put("receiver_port", PEER_PORT);
 
 		Message downloadRequestMessage = new Message(body, Message.Type.download_request);
 		// 3. Connect to peer
 		try (Socket peerSocket = new Socket(ip, port);
-			 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(peerSocket.getOutputStream()));
+			 DataOutputStream dos = new DataOutputStream(peerSocket.getOutputStream());
 			 BufferedInputStream bis = new BufferedInputStream(peerSocket.getInputStream());
 			 FileOutputStream fos = new FileOutputStream(targetFile)) {
 
 			// 4. Send request
-			writer.write(JSONUtils.toJson(downloadRequestMessage));
-			writer.newLine();
-			writer.flush();
+			dos.writeUTF(JSONUtils.toJson(downloadRequestMessage));
+			dos.flush();
 
 			// 5. Receive file data
 			byte[] buffer = new byte[4096];
@@ -200,18 +196,19 @@ public class PeerApp {
 			String receivedMD5 = MD5Hash.hashFile(targetFile.getPath());
             assert receivedMD5 != null;
             if (!receivedMD5.equals(md5)) {
-				System.err.println("");
 				targetFile.delete();
-				return;
+				return "The file has been downloaded from peer but is corrupted!";
 			}
 
 			// 8. Update received files list
 			String sender = ip + ":" + port;
 			addReceivedFile(sender, filename + " " + md5); // check
+			return "File downloaded successfully: " + filename;
 
 		} catch (IOException e) {
 			e.printStackTrace();
 			targetFile.delete();
+			return "";
 		}
 	}
 }
