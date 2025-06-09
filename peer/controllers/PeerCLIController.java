@@ -103,6 +103,6 @@ public class PeerCLIController {
 
 	public static String endProgram() {
 		PeerApp.endAll();
-		return "";
+		return "Closing the program...";
 	}
 }

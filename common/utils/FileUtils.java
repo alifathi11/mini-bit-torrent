@@ -48,4 +48,42 @@ public class FileUtils {
 		return formattedFileNames.toString();
 	}
 
+	public static String getSortedFilesAndPeers(Map<String, List<String>> filesToSort) {
+		if (filesToSort == null || filesToSort.isEmpty()) {
+			return "Files not found.";
+		}
+
+		List<String[]> entries = new ArrayList<>();
+
+		for (Map.Entry<String, List<String>> entry : filesToSort.entrySet()) {
+			String peer = entry.getKey();
+			List<String> files = entry.getValue();
+
+			for (String fileEntry : files) {
+				int idx = fileEntry.lastIndexOf(' ');
+				if (idx != -1) {
+					String fileName = fileEntry.substring(0, idx).trim();
+					String md5 = fileEntry.substring(idx + 1).trim();
+					entries.add(new String[]{fileName, md5, peer});
+				}
+			}
+		}
+
+		entries.sort((e1, e2) -> {
+			int cmp = e1[0].compareTo(e2[0]); // compare fileName
+			if (cmp != 0) return cmp;
+
+			String ip1 = e1[2].split(":")[0];
+			String ip2 = e2[2].split(":")[0];
+			return ip1.compareTo(ip2);
+		});
+
+		StringBuilder result = new StringBuilder();
+		for (String[] e : entries) {
+			result.append(e[0]).append(" ").append(e[1]).append(" - ").append(e[2]).append("\n");
+		}
+
+		return result.toString();
+	}
+
 }

@@ -61,7 +61,7 @@ public class TrackerConnectionController {
 		// 2. Send message and wait for response
 		Message response = connection.sendAndWaitForResponse(message, TIMEOUT_MILLIS);
 		if (response == null || !response.getFromBody("response").equals("ok")) {
-			System.out.println("");
+			System.out.println("Failed to get Peer's response.");
 			return null;
 		}
 		// 3. Parse and return sent files map
@@ -77,7 +77,7 @@ public class TrackerConnectionController {
 		// 2. Send message and wait for response
 		Message response = connection.sendAndWaitForResponse(message, TIMEOUT_MILLIS);
 		if (response == null || !response.getFromBody("response").equals("ok")) {
-			System.out.println("");
+			System.out.println("Failed to get Peer's response.");
 			return null;
 		}
 		// 3. Parse and return received files map

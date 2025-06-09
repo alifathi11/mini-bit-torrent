@@ -208,7 +208,7 @@ public class PeerApp {
 		} catch (IOException e) {
 			e.printStackTrace();
 			targetFile.delete();
-			return "";
+			return "Failed to receive file.";
 		}
 	}
 }
